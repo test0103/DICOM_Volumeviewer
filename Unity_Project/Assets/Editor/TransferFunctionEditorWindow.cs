@@ -26,8 +26,8 @@ public class TransferFunctionEditorWindow : EditorWindow
     private float leftOff = 20.0f;
     private void OnEnable()
     {
-        tfGUIMat = Resources.Load<Material>("TransferFunctionGUIMat");
-        tfPaletteGUIMat = Resources.Load<Material>("TransferFunctionPaletteGUIMat");
+        tfGUIMat = Resources.Load("TransferFunctionGUIMat", typeof(Material)) as Material;//.Load<Material>("TransferFunctionGUIMat");
+        tfPaletteGUIMat = Resources.Load("TransferFunctionPaletteGUIMat", typeof(Material)) as Material;// as Material;Resources.Load<Material>("TransferFunctionPaletteGUIMat");
     }
 
     private void OnGUI()

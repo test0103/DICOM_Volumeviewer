@@ -1,8 +1,18 @@
 
-Library/
+Unity_Project/Library/
 
-Logs/
+Unity_Project/Logs/
 
-Assets/BildExport/
+Unity_Project/Assets/BildExport/
 
-Assets/BildAssets/
+Unity_Project/Assets/BildAssets/
+
+.vscode/
+
+Unity_Project/.vscode/
+
+Unity_Project/Assembly-CSharp.csproj
+
+Unity_Project/Assembly-CSharp-Editor.csproj
+
+Unity_Project/Temp/

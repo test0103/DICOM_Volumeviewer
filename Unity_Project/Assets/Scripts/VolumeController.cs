@@ -10,6 +10,7 @@ public class VolumeController : MonoBehaviour {
     [SerializeField] protected Material material;
     [SerializeField] public VolumeTextureLoader textLoader;
     public Texture3D currTexture;
+    public Texture2D noiseTexture ;
     [Range(0f, 1f)] public float sliceXMin = 0.0f, sliceXMax = 1.0f;
     [Range(0f, 1f)] public float sliceYMin = 0.0f, sliceYMax = 1.0f;
     [Range(0f, 1f)] public float sliceZMin = 0.0f, sliceZMax = 1.0f;
@@ -37,6 +38,9 @@ public class VolumeController : MonoBehaviour {
         } else {
             Debug.LogError("Keine TF bei " + tfPath + " gefudnen");
         }
+        const int noiseDimX = 512;
+        const int noiseDimY = 512;
+        noiseTexture = NoiseTextureGenerator.GenerateNoiseTexture(noiseDimX, noiseDimY);
     }
 
     public TransferFunction getTransferFunction() {
@@ -59,6 +63,7 @@ public class VolumeController : MonoBehaviour {
         Debug.Log("HU Scale --  Low: " + textLoader.getLowestHound() + " Upper: " + textLoader.getHighestHound());
         Debug.Log("Scale: " + scaleZ + " dep: " + currTexture.depth + " heigth: " + currTexture.height);
         render.material.SetTexture("_Volume", currTexture);
+        render.material.SetTexture("_NoiseTex",noiseTexture);
     }
 
     void Update() {

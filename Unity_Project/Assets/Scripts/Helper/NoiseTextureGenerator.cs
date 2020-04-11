@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿/* 
+ * Copyright (c) 2019 Matias Lavik MIT License
+ * https://github.com/mlavik1/UnityVolumeRendering
+ */
+using UnityEngine;
 
 public class NoiseTextureGenerator
 {
