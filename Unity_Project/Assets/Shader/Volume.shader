@@ -45,7 +45,8 @@ Shader "Ray Marching/Volume"
 			sampler2D _NoiseTex;
 			sampler2D _TFTex;
 			float _RenderMode,_Debug, _WinWidth, _WinCenter, _IntMove, _Intensity, _Threshold, _HoundLow, _HoundMax, _IsoMin, _IsoMax;
-			half3 _SliceMin, _SliceMax,_LightDir;
+			float3 _SliceMin, _SliceMax,_LightDir;
+			float stepSize = sqrt(3) / 500; //Basis Wert
 
 			struct appdata {
 				float4 vertex : POSITION;
@@ -124,37 +125,21 @@ Shader "Ray Marching/Volume"
 			}
 
 			float4 frag(v2f i) : SV_Target {
-				const float stepSize = sqrt(3) / _RaySteps; //Longest distance in cube (worst case)
+				stepSize = sqrt(3) / _RaySteps; //Longest distance in cube (worst case)
 				float3 rayStartPos = i.vertexLocal + float3(0.5f, 0.5f, 0.5f);
-                float3 rayDir = ObjSpaceViewDir(float4(i.vertexLocal, 0.0f));
-                rayDir = normalize(rayDir);	
-				float3 lightDir = normalize(_LightDir);
-				rayStartPos = rayStartPos + (2.0f * rayDir / _RaySteps) * tex2D(_NoiseTex, float2(i.uv.x, i.uv.y)).r;
-
-
-				// float3 rayDir = ObjSpaceViewDir(float4(i.vertexLocal, 0.0f));
-				// float3 rayStartPos = i.vertexLocal + float3(0.5f, 0.5f, 0.5f) + rayDir * stepSize; // Half unit movement always needed
-                // rayDir = normalize(rayDir);
-				// 
-				// float3 lightDir = normalize(_LightDir);
-				
-
-			/* 	float3 rayStartPos = i.vertexLocal + float3(0.5f, 0.5f, 0.5f);
-				
                 float3 rayDir = normalize(ObjSpaceViewDir(float4(i.vertexLocal, 0.0f)));
-				rayStartPos = rayStartPos + (2.0f * rayDir / _RaySteps) * tex2D(_NoiseTex, float2(i.uv.x, i.uv.y)).r;
-				rayStartPos += rayDir * stepSize * _RaySteps;
-                rayDir = -rayDir;
-                float3 lightDir = -rayDir; */
-
-
-
+				#if MODE_SURF
+					rayStartPos += rayDir * stepSize * _RaySteps;
+					float3 lightDir = normalize(_LightDir);
+					rayDir = -rayDir;
+					rayStartPos = rayStartPos + (2.0f * rayDir / _RaySteps) * tex2D(_NoiseTex, float2(i.uv.x, i.uv.y)).r;
+				#endif
 				float4	ray_col = float4(0.0f, 0.0f, 0.0f, 0.0f);
-				for (int step =2; step < _RaySteps; step++) {
+				for (int step =1; step <= _RaySteps; step++) {
 					const float dist = step * stepSize;
                     const float3 ray_pos = rayStartPos + rayDir * dist;
 					if (ray_pos.x < 0.0f || ray_pos.x >= 1.0f || ray_pos.y < 0.0f || ray_pos.y > 1.0f || ray_pos.z < 0.0f || ray_pos.z > 1.0f){
-						break; 
+						continue; 
 					}
 					float voxel_dens = get_data(ray_pos);
 					float4 voxel_col = getTF1DColour(voxel_dens);
@@ -167,20 +152,20 @@ Shader "Ray Marching/Volume"
 						ray_col.rgb = _Color.rgb;
 					////////////////////////////////////
 					#elif MODE_DVR
-						ray_col.rgb =  voxel_col.a * voxel_col.rgb + (1 - voxel_col.a) * ray_col.rgb;
+						ray_col.rgb =  voxel_col.a * voxel_col.rgb + (1 - voxel_col.a) * ray_col.rgb; //Back to front
 						ray_col.a = voxel_col.a  + (1 - voxel_col.a) * ray_col.a;
 						if (ray_col.a > 1.0f)
                         	break;
 					////////////////////////////////////					
 					#elif MODE_SURF
-						if (voxel_dens > _IsoMin ) {
+						if (voxel_dens >= _IsoMin && voxel_dens <= _IsoMax ) {
 							float3 normal = normalize(getGradient(ray_pos));
 							float lightReflection = dot(normal, lightDir);
-							lightReflection = max(lerp(0.0f, 1.5f, lightReflection), 0.3f);
+							lightReflection = max(lerp(0.0f, 1.5f, lightReflection), 0.5f);
 							#if LIGHT_ON
 								ray_col.rgb = lightReflection * _Color;
-								// if(lightReflection>_Debug){
-								// 	ray_col.rgb= float3(normal);
+								// if(0.5>_Debug){
+								//  	ray_col.rgb= float3(lightReflection,lightReflection,lightReflection);
 								// }
 							#elif LIGHT_OFF
 								ray_col.rgb = _Color;
